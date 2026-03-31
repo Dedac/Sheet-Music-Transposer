@@ -1,0 +1,119 @@
+/* ── Sheet Music Transposer – custom styles ─────────────────────────── */
+
+:root {
+  --brand-primary: #1a3a5c;
+  --brand-accent:  #2e86de;
+  --surface:       #f8f9fa;
+  --border:        #dee2e6;
+  --text-muted:    #6c757d;
+}
+
+body {
+  background-color: var(--surface);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────── */
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ── Card panels ────────────────────────────────────────────────────── */
+.card {
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.card-header {
+  background-color: var(--brand-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Drop-zone ──────────────────────────────────────────────────────── */
+#drop-zone {
+  border: 2px dashed var(--brand-accent);
+  border-radius: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color .2s, border-color .2s;
+  background-color: #fff;
+}
+
+#drop-zone.drag-over {
+  background-color: #e8f4ff;
+  border-color: var(--brand-primary);
+}
+
+#drop-zone .drop-icon {
+  font-size: 2.5rem;
+  color: var(--brand-accent);
+}
+
+/* ── Preview image ──────────────────────────────────────────────────── */
+#preview-container {
+  position: relative;
+}
+
+#preview-img {
+  max-height: 260px;
+  width: 100%;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+#clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 7px;
+  font-size: .75rem;
+}
+
+/* ── Notation panels ────────────────────────────────────────────────── */
+.notation-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 1rem;
+  min-height: 160px;
+  overflow-x: auto;
+}
+
+/* abcjs injects an SVG; make it fill the panel width */
+.notation-panel svg {
+  width: 100%;
+  height: auto;
+}
+
+/* ── Spinner overlay ────────────────────────────────────────────────── */
+#spinner-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,.65);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#spinner-overlay.active {
+  display: flex;
+}
+
+/* ── Download button ────────────────────────────────────────────────── */
+#download-btn {
+  /* visibility toggled via Bootstrap d-none class in JS */
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+footer {
+  font-size: .85rem;
+  color: var(--text-muted);
+}

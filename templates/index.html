@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sheet Music Transposer</title>
+
+  <!-- Bootstrap 5 -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+  <!-- abcjs (sheet-music renderer) -->
+  <script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.4/dist/abcjs-basic-min.js"></script>
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Navbar ───────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-dark" style="background-color:#1a3a5c;">
+  <div class="container">
+    <span class="navbar-brand">
+      <i class="bi bi-music-note-list me-2"></i>Sheet Music Transposer
+    </span>
+    <small class="text-white-50">Powered by GitHub Copilot</small>
+  </div>
+</nav>
+
+<!-- ── Spinner overlay ──────────────────────────────────────────────────── -->
+<div id="spinner-overlay" role="status" aria-live="polite">
+  <div class="spinner-border text-primary" style="width:3rem;height:3rem;"></div>
+  <p class="fw-semibold text-primary mb-0">Analysing &amp; transposing…</p>
+</div>
+
+<!-- ── Main content ─────────────────────────────────────────────────────── -->
+<main class="container py-4">
+
+  <!-- Error alert -->
+  <div id="error-alert" class="alert alert-danger d-none" role="alert"></div>
+
+  <div class="row g-4">
+
+    <!-- ── Left column: upload + controls ─────────────────────────────── -->
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="bi bi-upload me-1"></i> Upload &amp; Configure
+        </div>
+        <div class="card-body d-flex flex-column gap-3">
+
+          <!-- Drop zone -->
+          <div id="drop-zone" role="button" tabindex="0"
+               aria-label="Click or drag an image here to upload">
+            <div class="drop-icon mb-2"><i class="bi bi-file-earmark-image"></i></div>
+            <p class="mb-1 fw-semibold">Drag &amp; drop your sheet music here</p>
+            <p class="text-muted small mb-2">or click to browse</p>
+            <p class="text-muted small mb-0">PNG, JPEG, GIF, WebP · max 10 MB</p>
+          </div>
+          <input type="file" id="file-input" accept="image/*" class="d-none" aria-hidden="true" />
+
+          <!-- Preview -->
+          <div id="preview-container" class="d-none">
+            <img id="preview-img" src="" alt="Sheet music preview" />
+            <button id="clear-btn" class="btn btn-sm btn-secondary" type="button"
+                    aria-label="Remove image">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <!-- Source key -->
+          <div>
+            <label for="source-key" class="form-label fw-semibold">
+              Source key <span class="text-muted fw-normal">(original)</span>
+            </label>
+            <select id="source-key" class="form-select">
+              {% for k in keys %}
+              <option value="{{ k }}"{% if k == "C major" %} selected{% endif %}>{{ k }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Destination key -->
+          <div>
+            <label for="dest-key" class="form-label fw-semibold">
+              Destination key <span class="text-muted fw-normal">(target)</span>
+            </label>
+            <select id="dest-key" class="form-select">
+              {% for k in keys %}
+              <option value="{{ k }}"{% if k == "G major" %} selected{% endif %}>{{ k }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mt-auto d-flex gap-2 flex-wrap">
+            <button id="transpose-btn" class="btn btn-primary flex-fill" type="button">
+              <i class="bi bi-arrow-left-right me-1"></i>Transpose
+            </button>
+            <button id="download-btn" class="btn btn-success d-none" type="button"
+                    title="Download transposed score as PNG">
+              <i class="bi bi-download me-1"></i>PNG
+            </button>
+          </div>
+
+        </div><!-- /card-body -->
+      </div><!-- /card -->
+    </div><!-- /col -->
+
+    <!-- ── Right column: notation output ──────────────────────────────── -->
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="bi bi-music-note-beamed me-1"></i> Sheet Music Output
+        </div>
+        <div class="card-body d-flex flex-column gap-4">
+
+          <!-- Original score -->
+          <div>
+            <h6 id="original-label" class="mb-2 text-muted">Original</h6>
+            <div id="original-panel" class="notation-panel"
+                 aria-label="Original sheet music notation">
+              <p class="text-muted small fst-italic mb-0">
+                Upload an image and click <strong>Transpose</strong> to see the original score here.
+              </p>
+            </div>
+          </div>
+
+          <!-- Transposed score -->
+          <div>
+            <h6 id="transposed-label" class="mb-2 text-muted">Transposed</h6>
+            <div id="transposed-panel" class="notation-panel"
+                 aria-label="Transposed sheet music notation">
+              <p class="text-muted small fst-italic mb-0">
+                The transposed score will appear here.
+              </p>
+            </div>
+          </div>
+
+        </div><!-- /card-body -->
+      </div><!-- /card -->
+    </div><!-- /col -->
+
+  </div><!-- /row -->
+
+  <!-- ── How it works ──────────────────────────────────────────────────── -->
+  <div class="row mt-4">
+    <div class="col">
+      <div class="card">
+        <div class="card-header">
+          <i class="bi bi-info-circle me-1"></i> How it works
+        </div>
+        <div class="card-body">
+          <ol class="mb-0">
+            <li>Upload a photo or scan of your sheet music.</li>
+            <li>Select the <strong>source key</strong> the music is currently written in.</li>
+            <li>Select the <strong>destination key</strong> you want to transpose to.</li>
+            <li>Click <strong>Transpose</strong> — the app sends the image to the
+                <a href="https://docs.github.com/en/copilot" target="_blank" rel="noopener">
+                GitHub Copilot</a> API which reads the notes and returns them in ABC notation.</li>
+            <li>The notes are automatically transposed and rendered side-by-side.</li>
+            <li>Use the <strong>PNG</strong> button to download the transposed score.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────── -->
+<footer class="border-top mt-4 py-3">
+  <div class="container text-center">
+    Sheet Music Transposer &bull; Powered by GitHub Copilot &bull;
+    <a href="https://github.com/Dedac/Sheet-Music-Transposer" target="_blank" rel="noopener">
+      GitHub
+    </a>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  crossorigin="anonymous"
+></script>
+<!-- App logic -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
